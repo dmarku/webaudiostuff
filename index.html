@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>MCT Audio Programming with Web Audio</title>
+
+    <script>
+      function map(value, min, max, outMin, outMax) {
+        const barycentric = (value - min) / (max - min);
+        return (1 - barycentric) * min + barycentric * max;
+      }
+
+      window.onload = function() {
+        this.addEventListener("mousemove", function(event) {
+          var x = event.clientX;
+          var y = event.clientY;
+
+          var width = window.innerWidth;
+          var height = window.innerHeight;
+
+          if (playing) {
+            modulator.frequency.value = map(y, 0, innerHeight, 0, 1173);
+            bandwidthGain.gain.value = map(x, 0, innerWidth, 0, 1173);
+          }
+        });
+      };
+    </script>
+  </head>
+
+  <body>
+    <button type="button" id="start-button">Start</button>
+    <button type="button" id="stop-button">Stop</button>
+
+    <script>
+      var AudioContext = window.AudioContext || window.webkitAudioContext;
+      var context;
+      var oscillator;
+      var modulator;
+      var bandwidthGain;
+      var playing = false;
+      document
+        .querySelector("#start-button")
+        .addEventListener("click", function() {
+          context = new AudioContext();
+
+          oscillator = context.createOscillator();
+          oscillator.frequency.value = 391;
+          oscillator.start();
+
+          bandwidthGain = context.createGain();
+          bandwidthGain.connect(oscillator.frequency);
+          bandwidthGain.gain.value = 800;
+
+          modulator = context.createOscillator();
+          modulator.connect(bandwidthGain);
+          modulator.start();
+
+          var volume = context.createGain();
+          volume.gain.value = 0.1;
+
+          oscillator.connect(volume);
+          volume.connect(context.destination);
+
+          playing = true;
+        });
+
+      document
+        .querySelector("#stop-button")
+        .addEventListener("click", function() {
+          context.suspend();
+          playing = 0;
+        });
+    </script>
+  </body>
+</html>
